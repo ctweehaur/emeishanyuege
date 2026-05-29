@@ -72,7 +72,7 @@
 <script>
     let originalQuizQuestions = [];
 
-    // 【终极重构注音引擎】：自动拦截过滤数字、英文字母序号与所有中文标点，强制隐藏拼音层且绝不消耗拼音流！
+// 【终极重构注音引擎】：遇到数字、字母、标点符号（包括斜杠 /）时，自动在拼音层垫入透明空格占位，确保后方汉字绝不错位！
     function alignText(zh, py) {
         if (!zh) return '';
         const chars = zh.trim().split('');
@@ -81,10 +81,12 @@
         let html = '';
         
         for (let c of chars) {
-            // 包含 0-9 数字、a-zA-Z 字母、点号、各种中文符号和箭头的黑科技过滤墙
-            if (/[0-9a-zA-Z\.\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
-                html += `<span class="punctuation">${c}</span>`;
+            // 包含 0-9 数字、a-zA-Z 字母、点号、斜杠 /、各类中英文标点的核心匹配
+            if (/[0-9a-zA-Z\.\/\\\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
+                // 核心黑科技：在拼音层注入 &nbsp; 透明空格，强行让标点符号在拼音层也占有一格宽度，守护后方对齐
+                html += `<span class="char-box"><span class="py-text" style="visibility: hidden;">&nbsp;</span><span class="punctuation">${c}</span></span>`;
             } else {
+                // 真正的汉字，精准咬合它对应的拼音
                 const p = pys[pIdx] || '';
                 html += `<span class="char-box"><span class="py-text">${p}</span><span class="zh-text">${c}</span></span>`;
                 pIdx++;
@@ -93,20 +95,21 @@
         return html;
     }
 
-    // 【前缀过滤器同步升级】：全面保障单选题选项前缀 A. B. C. D. 自动放空拼音，排版永不错位
+    // 【前缀过滤器同步升级】：全面保障选择题选项中包含斜杠或特殊符号时，拼音层依然严丝合缝
     function alignTextWithPrefix(prefix, zh, py) {
         if (!zh) return '';
         const chars = zh.trim().split('');
         const pys = py ? py.trim().split(/\s+/) : [];
         let html = '';
         
-        // 渲染干净且不带任何拼音的前缀标签
+        // 渲染干净的前缀标签（A. B. C. D.）
         html += `<span class="char-box" style="margin-right: 8px !important;"><span class="py-text">&nbsp;</span><span class="zh-text" style="font-weight: bold; color: #1e293b;">${prefix}</span></span>`;
         
         let pIdx = 0;
         for (let c of chars) {
-            if (/[0-9a-zA-Z\.\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
-                html += `<span class="punctuation">${c}</span>`;
+            if (/[0-9a-zA-Z\.\/\\\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
+                // 标点符号、斜杠在拼音层强制垫入 &nbsp; 撑开宽度
+                html += `<span class="char-box"><span class="py-text" style="visibility: hidden;">&nbsp;</span><span class="punctuation">${c}</span></span>`;
             } else {
                 const p = pys[pIdx] || '';
                 html += `<span class="char-box"><span class="py-text">${p}</span><span class="zh-text">${c}</span></span>`;
