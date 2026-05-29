@@ -112,17 +112,17 @@
         initInteractions();
     };
 
-    function renderPoem() {
+   function renderPoem() {
         const container = document.getElementById('dynamic-poem-container');
-        // 居中对称排版样式
-        let html = '<div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin-top: 10px;">'; 
+        // 核心微调：将默认的 line-height 稍微收紧，确保拼音和下一行之间不会有银河般的距离
+        let html = '<div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin: 0 auto !important; line-height: 1.8 !important;">'; 
         
         poemData.forEach(w => {
             if(w.punc) {
                 html += `<span class="punctuation">${w.text.trim()}</span>`;
-                // 【终极精确拦截】：只要遇到逗号“，”或者句号“。”，立刻切断当前行，强行另起一行
+                // 核心拦截：遇到逗号或句号断行，并将行与行之间的额外顶部间距（margin-top）从 12px 狠狠压缩到 4px
                 if (w.text.trim() === '，' || w.text.trim() === '。') {
-                    html += '</div><div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin-top: 12px;">';
+                    html += '</div><div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin: 0 auto !important; margin-top: 4px !important; line-height: 1.8 !important;">';
                 }
             } else {
                 let examClass = w.exam ? ' word exam-focus' : ' word';
