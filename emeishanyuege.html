@@ -61,22 +61,44 @@
     let originalQuizQuestions = [];
 
     // 【终极重构注音引擎】：加入最全的标点与特殊符号过滤（破折号、箭头、引号、括号），让它们自动不消耗拼音！
-    function alignText(zh, py) {
-        if (!zh) return '';
-        const chars = zh.trim().split('');
-        const pys = py ? py.trim().split(/\s+/) : [];
-        let pIdx = 0;
-        let html = '';
-        for (let c of chars) {
-            // 精准拦截：增加对中文破折号、各类括号、特殊符号如箭头的全面过滤
-            if (/[，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
-                html += `<span class="punctuation">${c}</span>`;
-            } else {
-                const p = pys[pIdx] || '';
-                html += `<span class="char-box"><span class="py-text">${p}</span><span class="zh-text">${c}</span></span>`;
-                pIdx++;
-            }
+    function alignText(text, pinyin) {
+        // 如果文本是纯数字、纯英文字母、或者带有点号的序号（例如: "1", "A", "1.", "T1"）
+        // 或者是标准的中文标点符号，一律视作“标点符号流”，直接放空拼音层，不给它们加任何注音！
+        const isNumberOrPunc = /^[0-9a-zA-Z\.\:\-\s]+$/.test(text.trim()) || 
+                               /[，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(text.trim());
+        
+        if (isNumberOrPunc) {
+            return `<div class="word-container punc-container">
+                        <div class="pinyin-line" style="visibility: hidden;"></div>
+                        <div class="text-line punctuation">${text}</div>
+                    </div>`;
         }
+
+        // 以下是正常汉字与拼音的精准切分与严丝合缝咬合逻辑
+        const chars = text.trim().split('');
+        const pinyins = pinyin.trim().split(/\s+/);
+        let html = '<div class="word-container">';
+        
+        let pyIndex = 0;
+        chars.forEach((ch) => {
+            // 如果切出来的单个字符是数字、英文字母或标点，单独把这个字符的拼音层抽空
+            if(/[0-9a-zA-Z\.\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(ch)) {
+                html += `<div class="char-box">
+                            <div class="pinyin-line" style="visibility: hidden;">&nbsp;</div>
+                            <div class="text-line punctuation">${ch}</div>
+                         </div>`;
+            } else {
+                // 正常的汉字，乖乖吃掉属于它自己的那个拼音
+                let py = pinyins[pyIndex] || '';
+                html += `<div class="char-box">
+                            <div class="pinyin-line">${py}</div>
+                            <div class="text-line">${ch}</div>
+                         </div>`;
+                pyIndex++;
+            }
+        });
+        
+        html += '</div>';
         return html;
     }
 
