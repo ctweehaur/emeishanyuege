@@ -114,16 +114,23 @@
 
     function renderPoem() {
         const container = document.getElementById('dynamic-poem-container');
-        let html = '<div class="poem-paragraph">&emsp;&emsp;'; 
+        // 居中对称排版样式
+        let html = '<div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin-top: 10px;">'; 
+        
         poemData.forEach(w => {
             if(w.punc) {
                 html += `<span class="punctuation">${w.text.trim()}</span>`;
+                // 【终极精确拦截】：只要遇到逗号“，”或者句号“。”，立刻切断当前行，强行另起一行
+                if (w.text.trim() === '，' || w.text.trim() === '。') {
+                    html += '</div><div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin-top: 12px;">';
+                }
             } else {
                 let examClass = w.exam ? ' word exam-focus' : ' word';
                 let examAttr = w.exam ? ' data-exam="true"' : '';
                 html += `<span class="${examClass}" data-text="${w.text.trim()}" data-pinyin="${w.py}" data-zh="${w.zh}" data-en="${w.en}"${examAttr}>${alignText(w.text, w.py)}</span>`;
             }
         });
+        
         html += '</div>';
         container.innerHTML = html;
     }
