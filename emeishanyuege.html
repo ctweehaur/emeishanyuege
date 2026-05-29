@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="classic_style.css">
     
     <!-- 引入独立的 5 个 JS 数据包 -->
-<script src="emeishanyuege_text.js"></script>
-<script src="emeishanyuege_translation.js"></script>
-<script src="emeishanyuege_analysis.js"></script>
-<script src="emeishanyuege_quiz.js"></script>
-<script src="emeishanyuege_shortq.js"></script>
+    <script src="emeishanyuege_text.js"></script>
+    <script src="emeishanyuege_translation.js"></script>
+    <script src="emeishanyuege_analysis.js"></script>
+    <script src="emeishanyuege_quiz.js"></script>
+    <script src="emeishanyuege_shortq.js"></script>
 </head>
 <body>
  
@@ -60,58 +60,40 @@
 <script>
     let originalQuizQuestions = [];
 
-    // 【终极重构注音引擎】：加入最全的标点与特殊符号过滤（破折号、箭头、引号、括号），让它们自动不消耗拼音！
-    function alignText(text, pinyin) {
-        // 如果文本是纯数字、纯英文字母、或者带有点号的序号（例如: "1", "A", "1.", "T1"）
-        // 或者是标准的中文标点符号，一律视作“标点符号流”，直接放空拼音层，不给它们加任何注音！
-        const isNumberOrPunc = /^[0-9a-zA-Z\.\:\-\s]+$/.test(text.trim()) || 
-                               /[，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(text.trim());
+    // 【终极重构注音引擎】：自动拦截过滤数字、英文字母序号与所有中文标点，强制隐藏拼音层且绝不消耗拼音流！
+    function alignText(zh, py) {
+        if (!zh) return '';
+        const chars = zh.trim().split('');
+        const pys = py ? py.trim().split(/\s+/) : [];
+        let pIdx = 0;
+        let html = '';
         
-        if (isNumberOrPunc) {
-            return `<div class="word-container punc-container">
-                        <div class="pinyin-line" style="visibility: hidden;"></div>
-                        <div class="text-line punctuation">${text}</div>
-                    </div>`;
-        }
-
-        // 以下是正常汉字与拼音的精准切分与严丝合缝咬合逻辑
-        const chars = text.trim().split('');
-        const pinyins = pinyin.trim().split(/\s+/);
-        let html = '<div class="word-container">';
-        
-        let pyIndex = 0;
-        chars.forEach((ch) => {
-            // 如果切出来的单个字符是数字、英文字母或标点，单独把这个字符的拼音层抽空
-            if(/[0-9a-zA-Z\.\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(ch)) {
-                html += `<div class="char-box">
-                            <div class="pinyin-line" style="visibility: hidden;">&nbsp;</div>
-                            <div class="text-line punctuation">${ch}</div>
-                         </div>`;
+        for (let c of chars) {
+            // 包含 0-9 数字、a-zA-Z 字母、点号、各种中文符号和箭头的黑科技过滤墙
+            if (/[0-9a-zA-Z\.\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
+                html += `<span class="punctuation">${c}</span>`;
             } else {
-                // 正常的汉字，乖乖吃掉属于它自己的那个拼音
-                let py = pinyins[pyIndex] || '';
-                html += `<div class="char-box">
-                            <div class="pinyin-line">${py}</div>
-                            <div class="text-line">${ch}</div>
-                         </div>`;
-                pyIndex++;
+                const p = pys[pIdx] || '';
+                html += `<span class="char-box"><span class="py-text">${p}</span><span class="zh-text">${c}</span></span>`;
+                pIdx++;
             }
-        });
-        
-        html += '</div>';
+        }
         return html;
     }
 
-    // 同样升级此处的过滤器
+    // 【前缀过滤器同步升级】：全面保障单选题选项前缀 A. B. C. D. 自动放空拼音，排版永不错位
     function alignTextWithPrefix(prefix, zh, py) {
         if (!zh) return '';
         const chars = zh.trim().split('');
         const pys = py ? py.trim().split(/\s+/) : [];
         let html = '';
+        
+        // 渲染干净且不带任何拼音的前缀标签
         html += `<span class="char-box" style="margin-right: 8px !important;"><span class="py-text">&nbsp;</span><span class="zh-text" style="font-weight: bold; color: #1e293b;">${prefix}</span></span>`;
+        
         let pIdx = 0;
         for (let c of chars) {
-            if (/[，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
+            if (/[0-9a-zA-Z\.\,，。？！：“”‘’（）《》、\-\:；—\(\)→\s]/.test(c)) {
                 html += `<span class="punctuation">${c}</span>`;
             } else {
                 const p = pys[pIdx] || '';
@@ -134,15 +116,16 @@
         initInteractions();
     };
 
-   function renderPoem() {
+    // 【绝句诗歌排版引擎】：遇到逗号、句号立刻自动换行，并极致压缩行与行之间的额外空白
+    function renderPoem() {
         const container = document.getElementById('dynamic-poem-container');
-        // 核心微调：将默认的 line-height 稍微收紧，确保拼音和下一行之间不会有银河般的距离
+        // 优雅的居中对称古诗流样式，大幅度收紧默认行高
         let html = '<div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin: 0 auto !important; line-height: 1.8 !important;">'; 
         
         poemData.forEach(w => {
             if(w.punc) {
                 html += `<span class="punctuation">${w.text.trim()}</span>`;
-                // 核心拦截：遇到逗号或句号断行，并将行与行之间的额外顶部间距（margin-top）从 12px 狠狠压缩到 4px
+                // 核心拦截点：当遇到逗号“，”或句号“。”时，强行分行，且上下边距压缩至 4px，解决间距过大的视觉感
                 if (w.text.trim() === '，' || w.text.trim() === '。') {
                     html += '</div><div class="poem-paragraph" style="text-align: center !important; padding-left: 0 !important; margin: 0 auto !important; margin-top: 4px !important; line-height: 1.8 !important;">';
                 }
