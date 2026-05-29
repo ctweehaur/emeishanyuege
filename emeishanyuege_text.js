@@ -19,7 +19,6 @@ const poemData = [
     { text: "清溪", py: "qīng xī", zh: "地名，即清溪驿，在今四川犍为县西南。", en: "Qingxi (Qingxi Station), a historical location in Sichuan.", exam: true },
     { text: "向", py: "xiàng", zh: "驶向、前往。", en: "Heading towards / sailing to." },
     { text: "三峡", py: "sān xiá", zh: "指长江三峡（瞿塘峡、巫峡、西陵峡），古代蜀地出川的必经险隘。", en: "The Three Gorges of the Yangtze River.", exam: true },
-    { punc: true, text: "密" }, // 占位标记，HTML引擎会自动过滤标点
     { punc: true, text: "，" },
     { text: "思君", py: "sī jūn", zh: "思念友人。在诗中诗人也通过拟人法，把陪伴自己的月亮当成了思念的朋友。", en: "Longing for you (the poet's friend, or metaphorically the moon)." },
     { text: "不", py: "bú", zh: "因为行色匆匆或山体遮挡而“不能”。此处依规范变调为第二声。", en: "Not / unable to." },
